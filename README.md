@@ -1,4 +1,4 @@
-### Dogecash Payment Gateway
+### Custodial Dogecash Payment Gateway
 
 ## How to install
 -------------------
