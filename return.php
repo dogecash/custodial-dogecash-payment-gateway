@@ -68,7 +68,7 @@ if ($_GET) {
         if ($addr_bal >= $amount) {
             $status = $mysqli->query("SELECT status from invoice_status WHERE invoice = '$invoice_num'")->fetch_array(MYSQLI_NUM);
 
-            if($status != 'payment_sent')
+            if($status[0] != 'payment_sent')
             {
                 //send funds to original address
                 $transaction = $dogec_rpc->sendToAddress($apiAddress, $amount);
