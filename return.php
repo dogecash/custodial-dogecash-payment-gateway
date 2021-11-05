@@ -29,7 +29,9 @@ if ($_GET) {
         $api_key = preg_replace('/[^A-Za-z0-9\-]/', '', $_GET['api_key']);
         $invoice_num = preg_replace('/[^A-Za-z0-9\-]/', '', $_GET['invoice']);
 
-        if ($mysqli->query("SELECT dogec_addr FROM api_keys WHERE `key` = '$api_key'")->num_rows != 1) {
+        $apiKey = $mysqli->query("SELECT dogec_addr FROM api_keys WHERE `key` = '$api_key'");
+
+        if ($apiKey->num_rows != 1) {
             echo json_encode([
                 "status"=>400,
                 "message"=>"Invalid API Key"
@@ -49,6 +51,7 @@ if ($_GET) {
         $address = $invoice[0];
         $amount = $invoice[1];
 
+        $apiAddress = ($apiKey->fetch_array(MYSQLI_NUM))[0];
 
         try {
             $request = $client->request('GET', "https://api2.dogecash.org/balance/$address");
@@ -63,11 +66,24 @@ if ($_GET) {
         $addr_bal = $response['result']['balance'] / 1e8;
 
         if ($addr_bal >= $amount) {
-            $mysqli->query("UPDATE invoice_status SET `status` = 'paid' WHERE invoice = '$invoice_num'");
+            $status = $mysqli->query("SELECT status from invoice_status WHERE invoice = '$invoice_num'")->fetch_array(MYSQLI_NUM);
+
+            if($status != 'payment_sent')
+            {
+                //send funds to original address
+                $transaction = $dogec_rpc->sendToAddress($apiAddress, $amount);
+
+                if($transaction)
+                {
+                    $mysqli->query("UPDATE invoice_status SET `status` = 'payment_sent' WHERE invoice = '$invoice_num'");
+                }
+            }
+            
             echo json_encode([
                 "status"=>200,
                 "inv_status"=>"paid"
             ]);
+
             return;
         }
         else if ($addr_bal > 0 && !($addr_bal >= $amount)) {
