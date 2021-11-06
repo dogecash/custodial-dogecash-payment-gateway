@@ -66,22 +66,25 @@ if ($_GET) {
         $addr_bal = $response['result']['balance'] / 1e8;
 
         if ($addr_bal >= $amount) {
-            $status = $mysqli->query("SELECT status from invoice_status WHERE invoice = '$invoice_num'")->fetch_array(MYSQLI_NUM);
+            $txid = $mysqli->query("SELECT txid from invoice_status WHERE invoice = '$invoice_num'")->fetch_array(MYSQLI_NUM);
 
-            if($status[0] != 'payment_sent')
+            if(empty($txid[0]))
             {
                 //send funds to original address
-                $transaction = $dogec_rpc->sendToAddress($apiAddress, $amount);
+                $transaction = $dogec_rpc->sendToAddress($apiAddress, $amount)->get();
 
                 if($transaction)
                 {
-                    $mysqli->query("UPDATE invoice_status SET `status` = 'payment_sent' WHERE invoice = '$invoice_num'");
+                    $mysqli->query("UPDATE invoice_status SET `status` = 'paid',
+                    `txid` = '$transaction' WHERE invoice = '$invoice_num'");
+                    $txid = $transaction;
                 }
             }
             
             echo json_encode([
                 "status"=>200,
-                "inv_status"=>"paid"
+                "inv_status"=>"paid",
+                "txid" => $txid
             ]);
 
             return;
