@@ -47,10 +47,12 @@ if ($_GET) {
             return;
         }
 
-        if ($mysqli->query("SELECT invoice FROM invoice_status WHERE invoice = '$invoice'")->num_rows == 1) {
+        $address = $mysqli->query("SELECT dogec_addr FROM invoice_status WHERE invoice = '$invoice'");
+
+        if ($address->num_rows == 1) {
             echo json_encode([
-                "status"=>400,
-                "message"=>"Invoice already exists"
+                "status"=>200,
+                "address"=>($address->fetch_array(MYSQLI_NUM))[0]
             ]);
             return;
         }
