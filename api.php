@@ -33,11 +33,12 @@ if ($_GET) {
             ]);
             return;
         }
-        $exist_address = $mysqli->query("SELECT `key` FROM api_keys WHERE dogec_addr = '$address'")->num_rows;
-        if ($exist_address == 1) {
+        $query = $mysqli->query("SELECT `key` FROM api_keys WHERE dogec_addr = '$address'");
+
+        if ($query->num_rows == 1) {
             echo json_encode([
-                "status"=>400,
-                "message"=>"Address already exists"
+                "status"=>200,
+                "api_key"=>$query->fetch_array(MYSQLI_NUM)[0]
             ]);
             return;
         }
