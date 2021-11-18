@@ -66,9 +66,9 @@ if ($_GET) {
         $addr_bal = $response['result']['balance'] / 1e8;
 
         if ($addr_bal >= $amount) {
-            $txid = $mysqli->query("SELECT txid from invoice_status WHERE invoice = '$invoice_num'")->fetch_array(MYSQLI_NUM);
+            $txid = $mysqli->query("SELECT txid from invoice_status WHERE invoice = '$invoice_num'")->fetch_array(MYSQLI_NUM)[0];
 
-            if(empty($txid[0]))
+            if(empty($txid))
             {
                 //send funds to original address
                 $transaction = $dogec_rpc->sendToAddress($apiAddress, $amount)->get();
